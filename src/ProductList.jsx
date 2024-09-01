@@ -1,21 +1,29 @@
 import React, { useState, useEffect } from "react";
 import "./ProductList.css";
+import { addItem, selectTotalItems } from "./CartSlice";
+import { useDispatch, useSelector } from "react-redux";
 import CartItem from "./CartItem";
-import { addItem} from './CartSlice'
 
 function ProductList() {
-    const [showCart, setShowCart] = useState(false);
-    const [showPlants, setShowPlants] = useState(false); // State to control the visibility of the About Us page
     const [addedToCart, setAddedToCart] = useState({});
+    const dispatch = useDispatch();
+    const totalItems = useSelector(selectTotalItems);
+
+    const [showCart, setShowCart] = useState(false);
+    const handleCart = () => {
+        setShowCart(true);
+    };
+    const handleProducts = () => {
+        setShowCart(false);
+    };
 
     const handleAddToCart = product => {
         dispatch(addItem(product));
         setAddedToCart(prevState => ({
             ...prevState,
-            [product.name]: true // Set the product name as key and value as true to indicate it's added to cart
+            [product.name]: true //Set the product name as key and value as true to indicate it's added to cart
         }));
     };
-
     const plantsArray = [
         {
             category: "Air Purifying Plants",
@@ -259,21 +267,6 @@ function ProductList() {
         fontSize: "30px",
         textDecoration: "none"
     };
-
-    const handleCartClick = e => {
-        e.preventDefault();
-        setShowCart(true); // Set showCart to true when cart icon is clicked
-    };
-    const handlePlantsClick = e => {
-        e.preventDefault();
-        setShowPlants(true); // Set showAboutUs to true when "About Us" link is clicked
-        setShowCart(false); // Hide the cart when navigating to About Us
-    };
-
-    const handleContinueShopping = e => {
-        e.preventDefault();
-        setShowCart(false);
-    };
     return (
         <div>
             <div className="navbar" style={styleObj}>
@@ -298,21 +291,13 @@ function ProductList() {
                 <div style={styleObjUl}>
                     <div>
                         {" "}
-                        <a
-                            href="#"
-                            onClick={e => handlePlantsClick(e)}
-                            style={styleA}
-                        >
+                        <a href="#" style={styleA}>
                             Plants
                         </a>
                     </div>
                     <div>
                         {" "}
-                        <a
-                            href="#"
-                            onClick={e => handleCartClick(e)}
-                            style={styleA}
-                        >
+                        <a href="#" style={styleA} onClick={handleCart}>
                             <h1 className="cart">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -338,12 +323,19 @@ function ProductList() {
                                         id="mainIconPathAttribute"
                                     ></path>
                                 </svg>
+                                {totalItems > 0 && (
+                                    <span className="cart_quantity_count">
+                                        {totalItems}
+                                    </span>
+                                )}
                             </h1>
                         </a>
                     </div>
                 </div>
             </div>
-            {!showCart ? (
+            {showCart ? (
+                <CartItem onContinueShopping={handleProducts} />
+            ) : (
                 <div className="product-grid">
                     {plantsArray.map((category, index) => (
                         <div key={index}>
@@ -364,14 +356,26 @@ function ProductList() {
                                         <div className="product-title">
                                             {plant.name}
                                         </div>
-                                        {/*Similarly like the above plant.name show other details like description and cost*/}
+                                        <div className="product-description">
+                                            {plant.description}
+                                        </div>
+                                        <div className="product-cost">
+                                            {plant.cost}
+                                        </div>
                                         <button
-                                            className="product-button"
+                                            className={`product-button ${
+                                                addedToCart[plant.name]
+                                                    ? "added-to-cart"
+                                                    : ""
+                                            }`}
                                             onClick={() =>
                                                 handleAddToCart(plant)
                                             }
+                                            disabled={addedToCart[plant.name]}
                                         >
-                                            Add to Cart
+                                            {addedToCart[plant.name]
+                                                ? "Added to cart"
+                                                : "Add to cart"}
                                         </button>
                                     </div>
                                 ))}
@@ -379,8 +383,6 @@ function ProductList() {
                         </div>
                     ))}
                 </div>
-            ) : (
-                <CartItem onContinueShopping={handleContinueShopping} />
             )}
         </div>
     );
